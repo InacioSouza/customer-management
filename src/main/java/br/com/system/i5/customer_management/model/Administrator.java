@@ -1,6 +1,7 @@
 package br.com.system.i5.customer_management.model;
 
 import br.com.system.i5.customer_management.model.api.AuditInformation;
+import br.com.system.i5.customer_management.records.form.AdministratorForm;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @SuperBuilder
 public class Administrator extends AuditInformation {
+
+    public Administrator(AdministratorForm input) {
+        this.administratorName = input.administratorName();
+        this.administratorPhone = input.administratorPhone();
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

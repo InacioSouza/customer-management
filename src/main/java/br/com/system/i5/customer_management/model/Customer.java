@@ -12,7 +12,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -61,20 +60,12 @@ public class Customer extends AuditInformation {
     @Column(name = "platform_cost", nullable = false)
     private BigDecimal platformCost;
 
+    private BigDecimal amountChargedAI;
+
     @Version
     private Long version;
 
     public Customer(@NotNull UUID customerId) {
         this.id = customerId;
-    }
-
-    @PrePersist
-    private void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    private void preUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

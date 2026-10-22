@@ -1,6 +1,7 @@
 package br.com.system.i5.customer_management.model;
 
 import br.com.system.i5.customer_management.model.api.AuditInformation;
+import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Table(name = "resources_customers")
@@ -22,29 +24,20 @@ public class ResourcesCustomer extends AuditInformation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "number_users")
-    private Integer numberUsers;
+    @OneToOne
+    private Customer customer;
 
-    @Column(name = "incentivized_users")
-    private Integer incentivizedUsers;
+    @Enumerated(value = EnumType.STRING)
+    private ResourceTypeEnum resourceType;
 
-    @Column(name = "number_official_channels")
-    private Integer numberOfficialChannels;
+    @Column(name = "total_quantity")
+    private Integer totalQuantity;
 
-    @Column(name = "number_unofficial_channels")
-    private Integer numberUnofficialChannels;
+    private BigDecimal totalAmountPaid;
 
-    @Column(name = "number_instagram_channels")
-    private Integer numberInstagramChannels;
+    private BigDecimal averageValueTotalQuantity;
 
-    @Column(name = "incentivized_instagram_channels")
-    private Integer incentivizedInstagramChannels;
-
-    @Column(name = "official_incentivized_channels")
-    private Integer officialIncentivizedChannels;
-
-    @Column(name = "unofficial_incentivized_channels")
-    private Integer unofficialIncentivizedChannels;
+    private BigDecimal averageValueOnlyPaid;
 
     @Version
     private Long version;

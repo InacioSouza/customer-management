@@ -1,10 +1,7 @@
 package br.com.system.i5.customer_management.model.api;
 
 import br.com.system.i5.customer_management.model.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,4 +29,14 @@ public abstract class AuditInformation {
 
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
+
+    @PrePersist
+    private void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

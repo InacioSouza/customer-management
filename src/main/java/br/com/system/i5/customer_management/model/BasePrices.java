@@ -20,6 +20,7 @@ public class BasePrices extends AuditInformation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private BigDecimal userUnit;
+    private BigDecimal AIModule;
     private BigDecimal officialWhatsAppChannel;
     private BigDecimal unofficialWhatsAppChannel;
     private BigDecimal instagramChannel;
@@ -27,4 +28,20 @@ public class BasePrices extends AuditInformation {
 
     @Version
     private Long version;
+
+    public BasePrices(
+            BigDecimal userUnit,
+            BigDecimal AIModule,
+            BigDecimal officialWhatsAppChannel,
+            BigDecimal unofficialWhatsAppChannel,
+            BigDecimal instagramChannel,
+            BigDecimal messengerChannel
+    ) {
+        this.userUnit = userUnit;
+        this.AIModule = AIModule;
+        this.officialWhatsAppChannel = officialWhatsAppChannel;
+        this.unofficialWhatsAppChannel = unofficialWhatsAppChannel;
+        this.instagramChannel = instagramChannel;
+        this.messengerChannel = messengerChannel;
+    }
 }
