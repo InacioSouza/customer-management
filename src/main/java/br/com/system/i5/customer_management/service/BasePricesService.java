@@ -30,4 +30,8 @@ public class BasePricesService {
 
         return basePricesRepository.save(basePrices);
     }
+
+    public void delete(UUID id) {
+        basePricesRepository.deleteById(id);
+    }
 }

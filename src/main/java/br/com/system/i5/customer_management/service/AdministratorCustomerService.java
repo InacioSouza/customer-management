@@ -21,11 +21,13 @@ public class AdministratorCustomerService {
     public AdministratorCustomer create(AdministratorCustomerForm input) {
 
         if (!administratorCustomerRepository.existsById(input.administratorID())) {
-            throw new IllegalArgumentException("There is no administrator record for the ID:" + input.administratorID());
+            throw new IllegalArgumentException(
+                    "There is no administrator record for the ID:" + input.administratorID());
         }
 
         if (!customerRepository.existsById(input.customerId())) {
-            throw new IllegalArgumentException("There is no customer record for the ID:" + input.customerId());
+            throw new IllegalArgumentException(
+                    "There is no customer record for the ID:" + input.customerId());
         }
 
         var administratorCustomer = new AdministratorCustomer(

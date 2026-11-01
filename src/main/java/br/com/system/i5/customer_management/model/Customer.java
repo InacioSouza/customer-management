@@ -50,6 +50,8 @@ public class Customer extends AuditInformation {
     @Column(nullable = false)
     private Boolean hasContract;
 
+    private Boolean hasLgpdContract;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerStatusEnum status;
