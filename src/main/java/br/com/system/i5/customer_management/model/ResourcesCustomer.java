@@ -33,6 +33,8 @@ public class ResourcesCustomer extends AuditInformation {
     @Column(name = "total_quantity")
     private Integer totalQuantity;
 
+    private Integer totalBonus;
+
     private BigDecimal totalAmountPaid;
 
     private BigDecimal averageValueTotalQuantity;

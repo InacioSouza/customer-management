@@ -6,6 +6,7 @@ import br.com.system.i5.customer_management.repository.BasePricesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -13,6 +14,12 @@ import java.util.UUID;
 public class BasePricesService {
 
     private BasePricesRepository basePricesRepository;
+
+    public BasePrices getUnique() {
+        List<BasePrices> listBasePrices = basePricesRepository.findAll();
+        if (listBasePrices.isEmpty()) return null;
+        return listBasePrices.get(0);
+    }
 
     public BasePrices create(BasePricesForm input) {
         if (basePricesRepository.getNumberRecords() != 0) {

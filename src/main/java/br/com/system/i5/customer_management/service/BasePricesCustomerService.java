@@ -48,4 +48,29 @@ public class BasePricesCustomerService {
     public void delete(UUID id) {
         basePricesCustomerRepository.deleteById(id);
     }
+
+    public BasePricesCustomer saveOrUpdateEntity(BasePricesCustomer basePricesCustomer) {
+
+        if (basePricesCustomer.getCustomer() == null ||
+                basePricesCustomer.getCustomer().getId() == null ||
+                !customerService.existsById(basePricesCustomer.getCustomer().getId())) {
+            throw new IllegalArgumentException("Provide a valid customer record");
+        }
+
+        var basePricesCustomerFound = basePricesCustomerRepository
+                .findRecordByCustomerId(basePricesCustomer.getCustomer().getId());
+
+        if (basePricesCustomerFound == null) {
+            basePricesCustomerFound = basePricesCustomer;
+        }
+
+        basePricesCustomerFound.setUserUnit(basePricesCustomer.getUserUnit());
+        basePricesCustomerFound.setOfficialWhatsAppChannel(basePricesCustomer.getOfficialWhatsAppChannel());
+        basePricesCustomerFound.setUnofficialWhatsAppChannel(basePricesCustomer.getUnofficialWhatsAppChannel());
+        basePricesCustomerFound.setInstagramChannel(basePricesCustomer.getInstagramChannel());
+        basePricesCustomerFound.setMessengerChannel(basePricesCustomer.getMessengerChannel());
+        basePricesCustomerFound.setCustomer(basePricesCustomer.getCustomer());
+
+        return basePricesCustomerRepository.save(basePricesCustomerFound);
+    }
 }

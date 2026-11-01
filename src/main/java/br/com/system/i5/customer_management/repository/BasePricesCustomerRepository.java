@@ -18,4 +18,9 @@ public interface BasePricesCustomerRepository extends JpaRepository<BasePricesCu
             """)
     boolean existsBasePriceByCustomerId(@Param("customerId") UUID customerId);
 
+
+    @Query("""
+            SELECT b FROM BasePricesCustomer b WHERE b.customer.id = :customerId
+            """)
+    BasePricesCustomer findRecordByCustomerId(@Param("customerId") UUID customerId);
 }

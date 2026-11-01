@@ -20,6 +20,10 @@ import java.util.UUID;
 @SuperBuilder
 public class Administrator extends AuditInformation {
 
+    public Administrator(UUID id) {
+        this.id = id;
+    }
+
     public Administrator(AdministratorForm input) {
         this.administratorName = input.administratorName();
         this.administratorPhone = input.administratorPhone();

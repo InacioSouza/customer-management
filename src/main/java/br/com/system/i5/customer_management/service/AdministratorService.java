@@ -3,12 +3,11 @@ package br.com.system.i5.customer_management.service;
 import br.com.system.i5.customer_management.model.Administrator;
 import br.com.system.i5.customer_management.model.AdministratorCustomer;
 import br.com.system.i5.customer_management.records.form.AdministratorForm;
-import br.com.system.i5.customer_management.repository.AdministratorCustomerRepository;
 import br.com.system.i5.customer_management.repository.AdministratorRepository;
-import br.com.system.i5.customer_management.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -16,20 +15,20 @@ import java.util.UUID;
 public class AdministratorService {
 
     private final AdministratorRepository administratorRepository;
-    private final AdministratorCustomerRepository administratorCustomerRepository;
-    private final CustomerRepository customerRepository;
+    private final AdministratorCustomerService administratorCustomerService;
+    private final CustomerService customerService;
 
     public Administrator create(AdministratorForm input) {
-        if (!customerRepository.existsById(input.customerId())) {
+        if (!customerService.existsById(input.customerId())) {
             throw new IllegalArgumentException("There is no customer record for the ID:" + input.customerId());
 
         }
         var administrator = new Administrator(input);
         var administratorCustomer = new AdministratorCustomer(
-                customerRepository.findById(input.customerId()).get(),
+                customerService.findById(input.customerId()),
                 administrator
         );
-        administratorCustomerRepository.save(administratorCustomer);
+        administratorCustomerService.save(administratorCustomer);
         return administratorRepository.save(administrator);
     }
 
@@ -43,14 +42,27 @@ public class AdministratorService {
         administrator.setAdministratorName(input.administratorName());
         administrator.setAdministratorPhone(input.administratorPhone());
 
-        if (!customerRepository.existsById(input.customerId())) {
+        if (!customerService.existsById(input.customerId())) {
             throw new IllegalArgumentException("There is no customer record for the ID:" + input.customerId());
 
         }
-        AdministratorCustomer administratorCustomer = administratorCustomerRepository.findByAdministratorId(id);
+        AdministratorCustomer administratorCustomer = administratorCustomerService.findByAdministratorId(id);
         administratorCustomer.setAdministrator(administrator);
-        administratorCustomer.setCustomer(customerRepository.findById(input.customerId()).get());
-        administratorCustomerRepository.save(administratorCustomer);
+        administratorCustomer.setCustomer(customerService.findById(input.customerId()));
+        administratorCustomerService.save(administratorCustomer);
         return administratorRepository.save(administrator);
+    }
+
+    public List<UUID> findIdsNotIn(List<UUID> listIds) {
+        return administratorRepository.findIdsNotIn(listIds);
+    }
+
+    public Administrator findById(UUID id) {
+        var optional = administratorRepository.findById(id);
+        return optional.orElse(null);
+    }
+
+    public boolean existsById(UUID id) {
+        return administratorRepository.existsById(id);
     }
 }
