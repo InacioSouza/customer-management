@@ -12,14 +12,14 @@ public interface AdministratorCustomerRepository extends JpaRepository<Administr
 
     @Query("""
                   SELECT ac
-                  FROM AdministratorCurtomer ac
+                  FROM AdministratorCustomer ac
                   WHERE ac.administrator.id = :id
             """)
     AdministratorCustomer findByAdministratorId(UUID id);
 
     @Query("""
                   SELECT COUNT(ac)
-                  FROM AdministratorCurtomer ac
+                  FROM AdministratorCustomer ac
                   WHERE ac.customer.id = :customerId
             """)
     int countAdministratorsForCustomerId(UUID customerId);

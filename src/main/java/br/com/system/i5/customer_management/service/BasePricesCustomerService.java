@@ -3,6 +3,7 @@ package br.com.system.i5.customer_management.service;
 import br.com.system.i5.customer_management.model.BasePricesCustomer;
 import br.com.system.i5.customer_management.records.form.BasePricesCustomerForm;
 import br.com.system.i5.customer_management.repository.BasePricesCustomerRepository;
+import br.com.system.i5.customer_management.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 public class BasePricesCustomerService {
 
     private final BasePricesCustomerRepository basePricesCustomerRepository;
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
 
     public BasePricesCustomer create(BasePricesCustomerForm input) {
         if (basePricesCustomerRepository.existsBasePriceByCustomerId(input.customerId())) {
@@ -21,7 +22,8 @@ public class BasePricesCustomerService {
                     "There can be only one BasePriceCustomer record for each customer");
         }
         var recordBasePrice = input.getEntity();
-        var customer = customerService.getCustomerByID(input.customerId());
+
+        var customer = customerRepository.findById(input.customerId()).orElse(null);
         if (customer == null) {
             throw new IllegalArgumentException(
                     "There is no customer record for the Id: " + input.customerId());
@@ -36,7 +38,8 @@ public class BasePricesCustomerService {
                     "There is no BasePricesCustomer record for the ID:" + id);
         }
         var basePricesCustomer = input.getEntity();
-        var customer = customerService.getCustomerByID(input.customerId());
+
+        var customer = customerRepository.findById(input.customerId()).orElse(null);
         if (customer == null) {
             throw new IllegalArgumentException(
                     "There is no customer record for the Id: " + input.customerId());
@@ -50,10 +53,9 @@ public class BasePricesCustomerService {
     }
 
     public BasePricesCustomer saveOrUpdateEntity(BasePricesCustomer basePricesCustomer) {
-
         if (basePricesCustomer.getCustomer() == null ||
                 basePricesCustomer.getCustomer().getId() == null ||
-                !customerService.existsById(basePricesCustomer.getCustomer().getId())) {
+                !customerRepository.existsById(basePricesCustomer.getCustomer().getId())) {
             throw new IllegalArgumentException("Provide a valid customer record");
         }
 

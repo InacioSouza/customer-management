@@ -56,9 +56,6 @@ public class Customer extends AuditInformation {
     @Column(nullable = false)
     private CustomerStatusEnum status;
 
-    @Column(name = "administrator_id", nullable = false)
-    private Administrator administrator;
-
     @Column(name = "platform_cost", nullable = false)
     private BigDecimal platformCost;
 

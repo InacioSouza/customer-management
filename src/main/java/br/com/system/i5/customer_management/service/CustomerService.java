@@ -283,6 +283,10 @@ public class CustomerService {
         return customerRepository.findById(id).orElse(null);
     }
 
+    public List<String> getListCustomerNiches() {
+        return this.customerRepository.getListCustomerNiches();
+    }
+
     public Page<Customer> searchCustomers(
             CustomerFilter filter,
             Pageable pageable

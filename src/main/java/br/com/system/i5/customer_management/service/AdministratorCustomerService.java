@@ -3,6 +3,7 @@ package br.com.system.i5.customer_management.service;
 import br.com.system.i5.customer_management.model.AdministratorCustomer;
 import br.com.system.i5.customer_management.records.form.AdministratorCustomerForm;
 import br.com.system.i5.customer_management.repository.AdministratorCustomerRepository;
+import br.com.system.i5.customer_management.repository.AdministratorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,32 +14,31 @@ import java.util.UUID;
 public class AdministratorCustomerService {
 
     private final AdministratorCustomerRepository administratorCustomerRepository;
-    private final AdministratorService administratorService;
+    private final AdministratorRepository administratorRepository;
     private final CustomerService customerService;
 
     public AdministratorCustomer create(AdministratorCustomerForm input) {
 
-        if (!administratorCustomerRepository.existsById(input.administratorID())) {
+        if (!administratorRepository.existsById(input.administratorID())) {
             throw new IllegalArgumentException(
-                    "There is no administrator record for the ID:" + input.administratorID());
+                    "There is no administrator record for the ID: " + input.administratorID());
         }
 
         if (!customerService.existsById(input.customerId())) {
             throw new IllegalArgumentException(
-                    "There is no customer record for the ID:" + input.customerId());
+                    "There is no customer record for the ID: " + input.customerId());
         }
 
         var administratorCustomer = new AdministratorCustomer(
                 customerService.findById(input.customerId()),
-                administratorService.findById(input.administratorID())
+                // Usando o repository para buscar o administrador
+                administratorRepository.findById(input.administratorID()).orElse(null)
         );
 
         return administratorCustomerRepository.save(administratorCustomer);
     }
 
-
     public void delete(UUID id) {
-
         var administratorCustomerOptional = administratorCustomerRepository.findById(id);
 
         if (administratorCustomerOptional.isEmpty()) {
@@ -73,10 +73,10 @@ public class AdministratorCustomerService {
             throw new IllegalArgumentException("The Administrator object cannot be null");
         }
 
-        if (!administratorService.existsById(adminCustomer.getCustomer().getId())) {
+        if (!administratorRepository.existsById(adminCustomer.getAdministrator().getId())) {
             throw new IllegalArgumentException(
                     "There is no Administrator for the ID: " +
-                            adminCustomer.getCustomer().getId()
+                            adminCustomer.getAdministrator().getId()
             );
         }
 

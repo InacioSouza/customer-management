@@ -25,6 +25,7 @@ public class BasePricesCustomer extends AuditInformation {
     private BigDecimal instagramChannel;
     private BigDecimal messengerChannel;
     private BigDecimal AIModule;
+    @OneToOne
     private Customer customer;
 
     @Version

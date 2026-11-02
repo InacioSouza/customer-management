@@ -1,3 +1,12 @@
 spring:
   application:
-    name: customer-management 
+    name: customer-management
+
+  datasource:
+    url: ${URL_DATABASE:jdbc:postgresql://localhost:5432/management-customer}
+    username: ${PROVEDOR_DATABASE:postgres}
+    password: ${SENHA_DATABASE:Abc#123}
+
+  jpa:
+    hibernate:
+    ddl-auto: update

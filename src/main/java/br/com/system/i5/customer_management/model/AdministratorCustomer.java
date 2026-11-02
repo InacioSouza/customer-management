@@ -23,10 +23,10 @@ public class AdministratorCustomer extends AuditInformation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToMany
+    @ManyToOne
     private Customer customer;
 
-    @OneToMany
+    @ManyToOne
     private Administrator administrator;
 
     public AdministratorCustomer(Customer customer, Administrator administrator) {
