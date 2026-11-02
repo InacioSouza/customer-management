@@ -37,7 +37,21 @@ public class CustomerService {
             List<ProofOfResource> listProofOfResource
     ) {
 
-        var customerSaved = customerRepository.save(input.getEntity());
+        var customer = input.getEntity();
+        if (customer.getEntryDate() != null &&
+                customer.getDepartureDate() != null &&
+                (customer.getEntryDate().after(customer.getDepartureDate()))) {
+            throw new IllegalArgumentException(
+                    "The 'entryDate' attribute must be earlier than 'departureDate'");
+        }
+
+        if (customer.getEntryDate() != null &&
+                customer.getDepartureDate() != null &&
+                (customer.getDepartureDate().before(customer.getEntryDate()))) {
+            throw new IllegalArgumentException(
+                    "The 'departureDate' attribute must be later than 'entryDate'");
+        }
+        var customerSaved = customerRepository.save(customer);
 
         List<UUID> listIdAdminNotExist = administratorService
                 .findIdsNotIn(input.listAdministratorId());
