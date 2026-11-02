@@ -6,7 +6,7 @@ import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record GeneralInformationCustomerResources(
+public record ResourcesCustomerForm(
         UUID customerID,
         ResourceTypeEnum resourceType,
         Integer totalQuantity,

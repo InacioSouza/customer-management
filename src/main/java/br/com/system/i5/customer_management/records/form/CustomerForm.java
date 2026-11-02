@@ -48,7 +48,7 @@ public record CustomerForm(
         BigDecimal messengerChannel,
 
         // Lista de recursos
-        List<GeneralInformationCustomerResources> listGeneralResources
+        List<ResourcesCustomerForm> listGeneralResources
 ) {
 
     public Customer getEntity() {
