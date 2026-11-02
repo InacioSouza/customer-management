@@ -1,0 +1,57 @@
+package br.com.system.i5.customer_management.records.form;
+
+import br.com.system.i5.customer_management.model.Customer;
+import br.com.system.i5.customer_management.model.enuns.CustomerStatusEnum;
+import br.com.system.i5.customer_management.model.enuns.TypeCompanyEnum;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+public record CutomerUpdateForm(
+        @NotBlank
+        String alias,
+        String registeredBusinessName,
+        String tradeName,
+        String cnpj,
+        @NotNull
+        TypeCompanyEnum typeCompany,
+        @NotBlank
+        String niche,
+        Date entryDate,
+        Date departureDate,
+        @NotNull
+        Boolean hasContract,
+        @NotNull
+        Boolean hasLgpdContract,
+        @NotNull
+        CustomerStatusEnum status,
+        @NotNull @PositiveOrZero
+        BigDecimal platformCost,
+        @NotNull @PositiveOrZero
+        BigDecimal amountChargedAI,
+
+        String notes,
+        byte[] photo
+) {
+    public Customer updateAttributes(Customer customer) {
+        if (customer != null) {
+            customer.setAlias(alias);
+            customer.setRegisteredBusinessName(registeredBusinessName);
+            customer.setTradeName(tradeName);
+            customer.setCnpj(cnpj);
+            customer.setTypeCompany(typeCompany);
+            customer.setNiche(niche);
+            customer.setEntryDate(entryDate);
+            customer.setDepartureDate(departureDate);
+            customer.setHasContract(hasContract);
+            customer.setHasLgpdContract(hasLgpdContract);
+            customer.setStatus(status);
+            customer.setPlatformCost(platformCost);
+            customer.setAmountChargedAI(amountChargedAI);
+        }
+        return customer;
+    }
+}

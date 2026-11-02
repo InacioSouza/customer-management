@@ -5,12 +5,14 @@ import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
 import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import br.com.system.i5.customer_management.records.dto.CustomerDto;
 import br.com.system.i5.customer_management.records.form.CustomerForm;
+import br.com.system.i5.customer_management.records.form.CutomerUpdateForm;
 import br.com.system.i5.customer_management.records.form.ProofOfResource;
 import br.com.system.i5.customer_management.repository.CustomerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -29,6 +31,81 @@ public class CustomerService {
     public Customer getCustomerByID(UUID customerID) {
         var customerOptional = customerRepository.findById(customerID);
         return customerOptional.orElse(null);
+    }
+
+    @Transactional
+    public CustomerDto updateBasicInformation(
+            UUID id,
+            CutomerUpdateForm input
+    ) {
+        if (!customerRepository.existsById(id)) {
+            throw new IllegalArgumentException(
+                    "There is no Customer for the Id: " + id);
+        }
+
+        var customer = customerRepository.findById(id).get();
+        BigDecimal differencePlatformPrice = input.platformCost()
+                .subtract(customer.getPlatformCost());
+        BigDecimal differenceAiPrice = input.amountChargedAI()
+                .subtract(customer.getAmountChargedAI());
+
+        input.updateAttributes(customer);
+
+        var comparisonResultPlatform = differencePlatformPrice
+                .compareTo(BigDecimal.ZERO);
+
+        if (comparisonResultPlatform > 0) {
+            var pricingMovement = new PricingMovement();
+            pricingMovement.setOperationType(OperationTypeEnum.ADD);
+            pricingMovement.setType(ResourceTypeEnum.PLATFORM);
+            pricingMovement.setValueAdded(differencePlatformPrice);
+            pricingMovement.setCustomer(customer);
+            pricingMovement.setNotes(input.notes());
+            pricingMovement.setPhoto(input.photo());
+            pricingMovementService.create(pricingMovement);
+
+        } else if (comparisonResultPlatform < 0) {
+            var pricingMovement = new PricingMovement();
+            pricingMovement.setOperationType(OperationTypeEnum.REMOVE);
+            pricingMovement.setType(ResourceTypeEnum.PLATFORM);
+            pricingMovement.setValueAdded(
+                    differencePlatformPrice.multiply(BigDecimal.valueOf(-1))
+            );
+            pricingMovement.setCustomer(customer);
+            pricingMovement.setNotes(input.notes());
+            pricingMovement.setPhoto(input.photo());
+            pricingMovementService.create(pricingMovement);
+        }
+
+        var comparisonResultAi = differenceAiPrice
+                .compareTo(BigDecimal.ZERO);
+
+        if (comparisonResultAi > 0) {
+            var pricingMovement = new PricingMovement();
+            pricingMovement.setOperationType(OperationTypeEnum.ADD);
+            pricingMovement.setType(ResourceTypeEnum.AI);
+            pricingMovement.setValueAdded(differenceAiPrice);
+            pricingMovement.setCustomer(customer);
+            pricingMovement.setNotes(input.notes());
+            pricingMovement.setPhoto(input.photo());
+
+            pricingMovementService.create(pricingMovement);
+
+        } else if (comparisonResultAi < 0) {
+            var pricingMovement = new PricingMovement();
+            pricingMovement.setOperationType(OperationTypeEnum.REMOVE);
+            pricingMovement.setType(ResourceTypeEnum.AI);
+            pricingMovement.setValueAdded(
+                    differenceAiPrice.multiply(BigDecimal.valueOf(-1))
+            );
+            pricingMovement.setCustomer(customer);
+            pricingMovement.setNotes(input.notes());
+            pricingMovement.setPhoto(input.photo());
+
+            pricingMovementService.create(pricingMovement);
+        }
+
+        return new CustomerDto(customerRepository.save(customer));
     }
 
     @Transactional

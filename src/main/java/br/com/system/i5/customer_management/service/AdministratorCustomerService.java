@@ -38,6 +38,21 @@ public class AdministratorCustomerService {
 
 
     public void delete(UUID id) {
+
+        var administratorCustomerOptional = administratorCustomerRepository.findById(id);
+
+        if (administratorCustomerOptional.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "There is no Administrator for the ID: " + id);
+        }
+
+        if (administratorCustomerRepository
+                .countAdministratorsForCustomerId(
+                        administratorCustomerOptional.get().getCustomer().getId()
+                ) == 1) {
+            throw new IllegalArgumentException(
+                    "You cannot remove this relationship! A customer must have at least one administrator.");
+        }
         administratorCustomerRepository.deleteById(id);
     }
 

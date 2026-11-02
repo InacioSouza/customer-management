@@ -11,9 +11,16 @@ import java.util.UUID;
 public interface AdministratorCustomerRepository extends JpaRepository<AdministratorCustomer, UUID> {
 
     @Query("""
-           SELECT ac
-           FROM AdministratorCurtomer ac
-           WHERE ac.administrator.id = :id
-     """)
+                  SELECT ac
+                  FROM AdministratorCurtomer ac
+                  WHERE ac.administrator.id = :id
+            """)
     AdministratorCustomer findByAdministratorId(UUID id);
+
+    @Query("""
+                  SELECT COUNT(ac)
+                  FROM AdministratorCurtomer ac
+                  WHERE ac.customer.id = :customerId
+            """)
+    int countAdministratorsForCustomerId(UUID customerId);
 }

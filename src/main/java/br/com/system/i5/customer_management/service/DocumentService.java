@@ -5,6 +5,8 @@ import br.com.system.i5.customer_management.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
@@ -22,9 +24,18 @@ public class DocumentService {
         }
 
         if (document.getContent() == null || document.getContent().length == 0) {
-            throw new IllegalArgumentException("The document must have some content");
+            throw new IllegalArgumentException(
+                    "The document must have some content");
         }
 
         return documentRepository.save(document);
+    }
+
+    public void deleteById(UUID id) {
+        if (!documentRepository.existsById(id)) {
+            throw new IllegalArgumentException(
+                    "There is no Document for the ID:" + id);
+        }
+        documentRepository.deleteById(id);
     }
 }
