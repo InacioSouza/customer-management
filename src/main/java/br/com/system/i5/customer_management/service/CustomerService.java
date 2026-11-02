@@ -4,12 +4,17 @@ import br.com.system.i5.customer_management.model.*;
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
 import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import br.com.system.i5.customer_management.records.dto.CustomerDto;
+import br.com.system.i5.customer_management.records.filter.CustomerFilter;
 import br.com.system.i5.customer_management.records.form.CustomerForm;
 import br.com.system.i5.customer_management.records.form.CutomerUpdateForm;
 import br.com.system.i5.customer_management.records.form.ProofOfResource;
 import br.com.system.i5.customer_management.repository.CustomerRepository;
+import br.com.system.i5.customer_management.repository.specifications.CustomerSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -278,4 +283,17 @@ public class CustomerService {
         return customerRepository.findById(id).orElse(null);
     }
 
+    public Page<Customer> searchCustomers(
+            CustomerFilter filter,
+            Pageable pageable
+    ) {
+        Specification<Customer> spec = CustomerSpecification
+                .byFilter(filter);
+
+        return customerRepository
+                .findAll(
+                        spec,
+                        pageable
+                );
+    }
 }
