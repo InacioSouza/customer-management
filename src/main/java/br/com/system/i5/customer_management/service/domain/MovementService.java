@@ -1,7 +1,8 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.Movement;
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
+import br.com.system.i5.customer_management.repository.CustomerRepository;
 import br.com.system.i5.customer_management.repository.MovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,12 +12,12 @@ import org.springframework.stereotype.Service;
 public class MovementService {
 
     private final MovementRepository movementRepository;
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
 
     private void validate(Movement movement) {
 
         if (movement.getCustomer() == null ||
-                !customerService.existsById(movement.getCustomer().getId())) {
+                !customerRepository.existsById(movement.getCustomer().getId())) {
             throw new IllegalArgumentException("Provide a valid value for customer");
         }
 
@@ -66,5 +67,4 @@ public class MovementService {
         validate(movement);
         return movementRepository.save(movement);
     }
-
 }

@@ -1,4 +1,4 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.BasePrices;
 import br.com.system.i5.customer_management.records.form.BasePricesForm;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BasePricesService {
 
-    private BasePricesRepository basePricesRepository;
+    private final BasePricesRepository basePricesRepository;
 
     public BasePrices getUnique() {
         List<BasePrices> listBasePrices = basePricesRepository.findAll();

@@ -12,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Entity
 @Table(name = "resources_customers")
 @Setter
 @Getter

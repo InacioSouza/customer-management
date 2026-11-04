@@ -1,20 +1,15 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.orchestration;
 
 import br.com.system.i5.customer_management.model.*;
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
 import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import br.com.system.i5.customer_management.records.dto.CustomerDto;
-import br.com.system.i5.customer_management.records.filter.CustomerFilter;
 import br.com.system.i5.customer_management.records.form.CustomerForm;
 import br.com.system.i5.customer_management.records.form.CutomerUpdateForm;
-import br.com.system.i5.customer_management.records.form.ProofOfResource;
-import br.com.system.i5.customer_management.repository.CustomerRepository;
-import br.com.system.i5.customer_management.repository.specifications.CustomerSpecification;
+import br.com.system.i5.customer_management.records.form.ResourcesCustomerForm;
+import br.com.system.i5.customer_management.service.domain.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,9 +17,9 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class CustomerService {
+public class CustomerOrchestrationService {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
     private final BasePricesService basePricesService;
     private final BasePricesCustomerService basePricesCustomerService;
     private final AdministratorService administratorService;
@@ -33,26 +28,19 @@ public class CustomerService {
     private final MovementService movementService;
     private final PricingMovementService pricingMovementService;
 
-    public Customer getCustomerByID(UUID customerID) {
-        var customerOptional = customerRepository.findById(customerID);
-        return customerOptional.orElse(null);
-    }
-
     @Transactional
     public CustomerDto updateBasicInformation(
             UUID id,
             CutomerUpdateForm input
     ) {
-        if (!customerRepository.existsById(id)) {
+        if (!customerService.existsById(id)) {
             throw new IllegalArgumentException(
                     "There is no Customer for the Id: " + id);
         }
 
-        var customer = customerRepository.findById(id).get();
+        var customer = customerService.findById(id);
         BigDecimal differencePlatformPrice = input.platformCost()
                 .subtract(customer.getPlatformCost());
-        BigDecimal differenceAiPrice = input.amountChargedAI()
-                .subtract(customer.getAmountChargedAI());
 
         input.updateAttributes(customer);
 
@@ -82,43 +70,47 @@ public class CustomerService {
             pricingMovementService.create(pricingMovement);
         }
 
+        BigDecimal differenceAiPrice = input.amountChargedAI()
+                .subtract(customer.getAmountChargedAI());
+
         var comparisonResultAi = differenceAiPrice
                 .compareTo(BigDecimal.ZERO);
 
         if (comparisonResultAi > 0) {
-            var pricingMovement = new PricingMovement();
-            pricingMovement.setOperationType(OperationTypeEnum.ADD);
-            pricingMovement.setType(ResourceTypeEnum.AI);
-            pricingMovement.setValueAdded(differenceAiPrice);
-            pricingMovement.setCustomer(customer);
-            pricingMovement.setNotes(input.notes());
-            pricingMovement.setPhoto(input.photo());
+            pricingMovementService.create(
+                    new PricingMovement(
+                            customer,
+                            ResourceTypeEnum.AI,
+                            OperationTypeEnum.ADD,
+                            differenceAiPrice,
+                            input.notes(),
+                            input.photo()
 
-            pricingMovementService.create(pricingMovement);
+                    )
+            );
 
         } else if (comparisonResultAi < 0) {
-            var pricingMovement = new PricingMovement();
-            pricingMovement.setOperationType(OperationTypeEnum.REMOVE);
-            pricingMovement.setType(ResourceTypeEnum.AI);
-            pricingMovement.setValueAdded(
-                    differenceAiPrice.multiply(BigDecimal.valueOf(-1))
-            );
-            pricingMovement.setCustomer(customer);
-            pricingMovement.setNotes(input.notes());
-            pricingMovement.setPhoto(input.photo());
 
-            pricingMovementService.create(pricingMovement);
+            pricingMovementService.create(
+                    new PricingMovement(
+                            customer,
+                            ResourceTypeEnum.AI,
+                            OperationTypeEnum.REMOVE,
+                            differenceAiPrice.multiply(BigDecimal.valueOf(-1)),
+                            input.notes(),
+                            input.photo()
+
+                    )
+            );
         }
 
-        return new CustomerDto(customerRepository.save(customer));
+        return new CustomerDto(customerService.save(customer));
     }
 
     @Transactional
     public CustomerDto create(
-            CustomerForm input,
-            List<ProofOfResource> listProofOfResource
+            CustomerForm input
     ) {
-
         var customer = input.getEntity();
         if (customer.getEntryDate() != null &&
                 customer.getDepartureDate() != null &&
@@ -133,7 +125,7 @@ public class CustomerService {
             throw new IllegalArgumentException(
                     "The 'departureDate' attribute must be later than 'entryDate'");
         }
-        var customerSaved = customerRepository.save(customer);
+        var customerSaved = customerService.save(customer);
 
         List<UUID> listIdAdminNotExist = administratorService
                 .findIdsNotIn(input.listAdministratorId());
@@ -149,7 +141,7 @@ public class CustomerService {
             var adminCustomer = new AdministratorCustomer();
             adminCustomer.setCustomer(customerSaved);
             adminCustomer.setAdministrator(new Administrator(idAdmin));
-            this.administratorCustomerService.save(adminCustomer);
+            administratorCustomerService.save(adminCustomer);
         }
 
         createBasePricesCustomer(input, customerSaved);
@@ -158,7 +150,7 @@ public class CustomerService {
         createMovementsAndPriceMovements(
                 customerSaved,
                 listResourcesCustomer,
-                listProofOfResource
+                input.listGeneralResources()
         );
 
         return new CustomerDto(customerSaved);
@@ -166,67 +158,43 @@ public class CustomerService {
 
     private void createMovementsAndPriceMovements(
             Customer customerSaved,
-            List<ResourcesCustomer> listResourcesCustomer,
-            List<ProofOfResource> listProofOfResource
+            List<ResourcesCustomer> listResourcesCustomerSaved,
+            List<ResourcesCustomerForm> listResourcesCustomerForms
     ) {
-        for (ResourcesCustomer resourceCustomer : listResourcesCustomer) {
+        for (ResourcesCustomer resourceCustomer : listResourcesCustomerSaved) {
 
-            ProofOfResource proofOfResource = listProofOfResource
+            var resourceCustomerForm = listResourcesCustomerForms
                     .stream()
-                    .filter(proof -> Objects.equals(
-                            resourceCustomer.getResourceType(),
-                            proof.type()
-                    ))
-                    .findFirst()
-                    .orElse(null);
+                    .filter(rc -> {
+                                return rc.resourceType() != null &&
+                                        resourceCustomer.getResourceType()
+                                                .equals(rc.resourceType());
+                            }
+                    ).findFirst()
+                    .get();
 
             movementService.create(
-                    createMovement(
+                    new Movement(
                             customerSaved,
-                            resourceCustomer,
-                            proofOfResource
+                            resourceCustomer.getResourceType(),
+                            OperationTypeEnum.ADD,
+                            resourceCustomer.getTotalQuantity(),
+                            resourceCustomerForm.notes(),
+                            resourceCustomerForm.file()
                     )
             );
 
             pricingMovementService.create(
-                    createPricingMovement(
+                    new PricingMovement(
                             customerSaved,
-                            resourceCustomer,
-                            proofOfResource
+                            resourceCustomer.getResourceType(),
+                            OperationTypeEnum.ADD,
+                            resourceCustomer.getTotalAmountPaid(),
+                            resourceCustomerForm.notes(),
+                            resourceCustomerForm.file()
                     )
             );
         }
-    }
-
-    private Movement createMovement(
-            Customer customerSaved,
-            ResourcesCustomer resourceCustomer,
-            ProofOfResource proofOfResource
-    ) {
-
-        var movement = new Movement();
-        movement.setType(resourceCustomer.getResourceType());
-        movement.setOperationType(OperationTypeEnum.ADD);
-        movement.setQuantityAdded(resourceCustomer.getTotalQuantity());
-        movement.setCustomer(customerSaved);
-        movement.setNotes(proofOfResource != null ? proofOfResource.notes() : null);
-        movement.setPhoto(proofOfResource != null ? proofOfResource.file() : null);
-        return movementService.create(movement);
-    }
-
-    private PricingMovement createPricingMovement(
-            Customer customerSaved,
-            ResourcesCustomer resourceCustomer,
-            ProofOfResource proofOfResource
-    ) {
-        var pricingMovement = new PricingMovement();
-        pricingMovement.setType(resourceCustomer.getResourceType());
-        pricingMovement.setOperationType(OperationTypeEnum.ADD);
-        pricingMovement.setValueAdded(resourceCustomer.getTotalAmountPaid());
-        pricingMovement.setCustomer(customerSaved);
-        pricingMovement.setNotes(proofOfResource != null ? proofOfResource.notes() : null);
-        pricingMovement.setPhoto(proofOfResource != null ? proofOfResource.file() : null);
-        return pricingMovement;
     }
 
     private List<ResourcesCustomer> createResourcesCustomer(CustomerForm input) {
@@ -273,31 +241,5 @@ public class CustomerService {
             basePricesCustomer.setMessengerChannel(input.messengerChannel());
         }
         basePricesCustomerService.saveOrUpdateEntity(basePricesCustomer);
-    }
-
-    public boolean existsById(UUID id) {
-        return customerRepository.existsById(id);
-    }
-
-    public Customer findById(UUID id) {
-        return customerRepository.findById(id).orElse(null);
-    }
-
-    public List<String> getListCustomerNiches() {
-        return this.customerRepository.getListCustomerNiches();
-    }
-
-    public Page<Customer> searchCustomers(
-            CustomerFilter filter,
-            Pageable pageable
-    ) {
-        Specification<Customer> spec = CustomerSpecification
-                .byFilter(filter);
-
-        return customerRepository
-                .findAll(
-                        spec,
-                        pageable
-                );
     }
 }

@@ -1,4 +1,4 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.orchestration;
 
 import br.com.system.i5.customer_management.model.Customer;
 import br.com.system.i5.customer_management.model.Movement;
@@ -7,130 +7,41 @@ import br.com.system.i5.customer_management.model.ResourcesCustomer;
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
 import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
 import br.com.system.i5.customer_management.records.form.ResourcesCustomerUpdateForm;
-import br.com.system.i5.customer_management.repository.ResourcesCustomerRepository;
+import br.com.system.i5.customer_management.service.domain.MovementService;
+import br.com.system.i5.customer_management.service.domain.PricingMovementService;
+import br.com.system.i5.customer_management.service.domain.ResourcesCustomerService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ResourcesCustomerService {
+public class ResourcesCustomerOrchestrationService {
 
-    private final ResourcesCustomerRepository resourcesCustomerRepository;
-    private final CustomerService customerService;
+    private final ResourcesCustomerService resourcesCustomerService;
     private final PricingMovementService pricingMovementService;
     private final MovementService movementService;
 
-    private void validate(ResourcesCustomer entity) {
-
-        if (entity.getCustomer() == null || !customerService.existsById(entity.getCustomer().getId())) {
-            throw new IllegalArgumentException("Provide a valid value for customer");
-        }
-
-        if (entity.getResourceType() == null) {
-            throw new IllegalArgumentException(
-                    "Provide a valid value for ResourceTypeEnum");
-        }
-
-        if (entity.getTotalQuantity() == null) {
-            throw new IllegalArgumentException(
-                    "Enter the total amount of resources");
-        }
-
-        if (entity.getTotalAmountPaid() == null) {
-            throw new IllegalArgumentException(
-                    "Enter the total Amount Paid of resources");
-        }
-
-        if (entity.getTotalBonus() == null) {
-            throw new IllegalArgumentException(
-                    "Enter the total amount of bonus resources");
-        }
-
-        if (entity.getTotalQuantity() < entity.getTotalBonus()) {
-            throw new IllegalArgumentException(
-                    "The total number of resources cannot be less than the number of bonus resources.");
-        }
-
-    }
-
-    private BigDecimal calculatesAverageValue(
-            BigDecimal totalAmountPaid,
-            Integer totalQuantity
-    ) {
-        var averageValueTotalQuantity = BigDecimal.ZERO;
-        if (!BigDecimal.ZERO.equals(totalAmountPaid)) {
-            averageValueTotalQuantity = totalAmountPaid
-                    .divide(
-                            BigDecimal.valueOf(totalQuantity),
-                            2,
-                            RoundingMode.HALF_UP
-                    );
-        }
-
-        return averageValueTotalQuantity;
-    }
-
-    public ResourcesCustomer saveOrUpdateEntity(
-            ResourcesCustomer entity
-    ) {
-
-        this.validate(entity);
-
-        ResourcesCustomer resourcesCustomer = resourcesCustomerRepository
-                .findResourceByTypeAndCustomer(
-                        entity.getResourceType(),
-                        entity.getCustomer().getId()
-                );
-
-        if (resourcesCustomer == null) {
-            resourcesCustomer = entity;
-        }
-
-        var averageValueTotalQuantity = calculatesAverageValue(
-                entity.getTotalAmountPaid(),
-                entity.getTotalQuantity()
-        );
-
-        var quantityBonus = entity.getTotalBonus() != null ? entity.getTotalBonus() : 0;
-        var nonBonusQuantity = entity.getTotalQuantity() - quantityBonus;
-
-        var averageValueOnlyPaid = calculatesAverageValue(
-                entity.getTotalAmountPaid(),
-                nonBonusQuantity
-        );
-
-        resourcesCustomer.setResourceType(entity.getResourceType());
-        resourcesCustomer.setAverageValueTotalQuantity(averageValueTotalQuantity);
-        resourcesCustomer.setAverageValueOnlyPaid(averageValueOnlyPaid);
-        resourcesCustomer.setTotalAmountPaid(entity.getTotalAmountPaid());
-        resourcesCustomer.setTotalQuantity(entity.getTotalQuantity());
-        resourcesCustomer.setTotalBonus(entity.getTotalBonus());
-        resourcesCustomer.setCustomer(customerService.getCustomerByID(entity.getCustomer().getId()));
-
-        return resourcesCustomerRepository.save(resourcesCustomer);
-    }
-
+    @Transactional
     public ResourcesCustomer updateEntityWithMovements(
             UUID id,
             ResourcesCustomerUpdateForm input
     ) {
-
-        if (!resourcesCustomerRepository.existsById(id)) {
+        if (!resourcesCustomerService.existsById(id)) {
             throw new IllegalArgumentException(
                     "No record of 'ResourcesCustomer' was found for the ID: " + id);
         }
 
-        var resourcesCustomer = resourcesCustomerRepository.findById(id).get();
+        var resourcesCustomer = resourcesCustomerService.findById(id);
         resourcesCustomer.setTotalQuantity(input.totalQuantity());
         resourcesCustomer.setTotalBonus(input.totalBonus());
         resourcesCustomer.setTotalAmountPaid(input.totalAmountPaid());
 
         resourcesCustomer.setAverageValueTotalQuantity(
-                calculatesAverageValue(
+                resourcesCustomerService.calculatesAverageValue(
                         resourcesCustomer.getTotalAmountPaid(),
                         resourcesCustomer.getTotalQuantity()
                 )
@@ -140,13 +51,13 @@ public class ResourcesCustomerService {
         var nonBonusQuantity = resourcesCustomer.getTotalQuantity() - quantityBonus;
 
         resourcesCustomer.setAverageValueOnlyPaid(
-                calculatesAverageValue(
+                resourcesCustomerService.calculatesAverageValue(
                         resourcesCustomer.getTotalAmountPaid(),
                         nonBonusQuantity
                 )
         );
 
-        var resourcesCustomerUpdated = saveOrUpdateEntity(resourcesCustomer);
+        var resourcesCustomerUpdated = resourcesCustomerService.saveOrUpdateEntity(resourcesCustomer);
 
         int showsVariationValue = resourcesCustomerUpdated.getTotalAmountPaid()
                 .subtract(resourcesCustomer.getTotalAmountPaid())
@@ -164,7 +75,6 @@ public class ResourcesCustomerService {
                     input.notes(),
                     input.photo()
             );
-
             pricingMovementService.create(pricingMovement);
 
         } else if (showsVariationValue < 0) {
@@ -191,7 +101,6 @@ public class ResourcesCustomerService {
                     input.notes(),
                     input.photo()
             );
-
             movementService.create(movement);
 
         } else if (showVariationQuantity < 0) {
@@ -203,7 +112,6 @@ public class ResourcesCustomerService {
                     input.notes(),
                     input.photo()
             );
-
             movementService.create(movement);
         }
 
@@ -257,5 +165,4 @@ public class ResourcesCustomerService {
         movement.setPhoto(file);
         return movement;
     }
-
 }

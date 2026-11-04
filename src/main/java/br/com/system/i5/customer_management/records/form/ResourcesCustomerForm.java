@@ -11,7 +11,9 @@ public record ResourcesCustomerForm(
         ResourceTypeEnum resourceType,
         Integer totalQuantity,
         Integer totalBonus,
-        BigDecimal totalAmountPaid
+        BigDecimal totalAmountPaid,
+        String notes,
+        byte[] file
 ) {
 
     public ResourcesCustomer getEntity() {

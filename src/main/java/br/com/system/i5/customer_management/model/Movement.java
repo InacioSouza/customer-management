@@ -2,6 +2,7 @@ package br.com.system.i5.customer_management.model;
 
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
 import br.com.system.i5.customer_management.model.enuns.ResourceTypeEnum;
+import br.com.system.i5.customer_management.records.form.ProofOfResource;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -55,6 +56,22 @@ public class Movement {
 
     @Version
     private Long version;
+
+    public Movement(
+            Customer customerSaved,
+            ResourceTypeEnum resourceType,
+            OperationTypeEnum operationType,
+            Integer quantity,
+            String notes,
+            byte[] photo
+    ) {
+        setType(resourceType);
+        setOperationType(operationType);
+        setQuantityAdded(quantity);
+        setCustomer(customerSaved);
+        setNotes(notes);
+        setPhoto(photo);
+    }
 
     @PrePersist
     private void prePersist() {

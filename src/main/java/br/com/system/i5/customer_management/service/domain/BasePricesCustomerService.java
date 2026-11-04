@@ -1,4 +1,4 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.BasePricesCustomer;
 import br.com.system.i5.customer_management.records.form.BasePricesCustomerForm;

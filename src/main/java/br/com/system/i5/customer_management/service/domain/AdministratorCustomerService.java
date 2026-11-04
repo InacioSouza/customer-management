@@ -1,9 +1,10 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.AdministratorCustomer;
 import br.com.system.i5.customer_management.records.form.AdministratorCustomerForm;
 import br.com.system.i5.customer_management.repository.AdministratorCustomerRepository;
 import br.com.system.i5.customer_management.repository.AdministratorRepository;
+import br.com.system.i5.customer_management.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class AdministratorCustomerService {
 
     private final AdministratorCustomerRepository administratorCustomerRepository;
     private final AdministratorRepository administratorRepository;
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
 
     public AdministratorCustomer create(AdministratorCustomerForm input) {
 
@@ -24,13 +25,13 @@ public class AdministratorCustomerService {
                     "There is no administrator record for the ID: " + input.administratorID());
         }
 
-        if (!customerService.existsById(input.customerId())) {
+        if (!customerRepository.existsById(input.customerId())) {
             throw new IllegalArgumentException(
                     "There is no customer record for the ID: " + input.customerId());
         }
 
         var administratorCustomer = new AdministratorCustomer(
-                customerService.findById(input.customerId()),
+                customerRepository.findById(input.customerId()).orElse(null),
                 // Usando o repository para buscar o administrador
                 administratorRepository.findById(input.administratorID()).orElse(null)
         );
@@ -62,7 +63,7 @@ public class AdministratorCustomerService {
             throw new IllegalArgumentException("The Customer object cannot be null");
         }
 
-        if (!customerService.existsById(adminCustomer.getCustomer().getId())) {
+        if (!customerRepository.existsById(adminCustomer.getCustomer().getId())) {
             throw new IllegalArgumentException(
                     "There is no Customer for the ID: " +
                             adminCustomer.getCustomer().getId()

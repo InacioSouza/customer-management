@@ -1,4 +1,4 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.Document;
 import br.com.system.i5.customer_management.repository.DocumentRepository;

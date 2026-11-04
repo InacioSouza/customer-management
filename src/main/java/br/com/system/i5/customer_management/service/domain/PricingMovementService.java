@@ -1,7 +1,8 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.PricingMovement;
 import br.com.system.i5.customer_management.model.enuns.OperationTypeEnum;
+import br.com.system.i5.customer_management.repository.CustomerRepository;
 import br.com.system.i5.customer_management.repository.PricingMovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,12 +14,12 @@ import java.math.BigDecimal;
 public class PricingMovementService {
 
     private final PricingMovementRepository pricingMovementRepository;
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
 
     private void validate(PricingMovement pricingMovement) {
 
         if (pricingMovement.getCustomer() == null ||
-                !customerService.existsById(pricingMovement.getCustomer().getId())) {
+                !customerRepository.existsById(pricingMovement.getCustomer().getId())) {
             throw new IllegalArgumentException("Provide a valid value for customer");
         }
 

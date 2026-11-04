@@ -1,13 +1,13 @@
-package br.com.system.i5.customer_management.service;
+package br.com.system.i5.customer_management.service.domain;
 
 import br.com.system.i5.customer_management.model.CustomerDocument;
 import br.com.system.i5.customer_management.records.form.CustomerDocumentForm;
 import br.com.system.i5.customer_management.repository.CustomerDocumentRepository;
+import br.com.system.i5.customer_management.repository.CustomerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,18 +16,18 @@ import java.util.UUID;
 public class CustomerDocumentService {
 
     private final CustomerDocumentRepository customerDocumentRepository;
-    private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
     private final DocumentService documentService;
 
     public CustomerDocument create(CustomerDocumentForm input) {
         var customerDocument = new CustomerDocument();
 
-        if (!customerService.existsById(input.customerID())) {
+        if (!customerRepository.existsById(input.customerID())) {
             throw new IllegalArgumentException(
                     "There is no customer record for the Id: " + input.customerID());
         }
 
-        customerDocument.setCustomer(customerService.getCustomerByID(input.customerID()));
+        customerDocument.setCustomer(customerRepository.findById(input.customerID()).orElse(null));
         customerDocument.setDocument(documentService.save(input.getDocumentEntity()));
 
         return customerDocumentRepository.save(customerDocument);
